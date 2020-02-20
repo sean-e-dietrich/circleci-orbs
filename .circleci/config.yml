@@ -89,6 +89,7 @@ orbs:
           - image: circleci/php:7.2-cli-buster
 
 workflows:
+  version: 2.1
   test-phpcs:
     - phpcs/drupal
     - phpcs/wordpress
