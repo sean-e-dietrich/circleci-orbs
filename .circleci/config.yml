@@ -3,13 +3,16 @@ version: 2.1
 orbs:
   orb-tools: circleci/orb-tools@9.0.0
   extract:
+    orbs:
+      orb-tools: circleci/orb-tools@9.0.0
     jobs:
       inline:
         parameters:
           orb:
             description: "The orb to extract"
             type: string
-        docker: circleci/ruby:buster
+        docker:
+          - image: circleci/ruby:buster
         working_directory: /tmp/project
         steps:
           - checkout
@@ -133,12 +136,15 @@ workflows:
       - orb-tools/pack:
           requires: [extract_inline_phpcs]
           filters: *all-filters
+          attach-workspace: true
+          source-dir: .circleci/extract-inline-orb/
       - orb-tools/publish-dev:
           requires: [orb-tools/pack]
-          orb-name: kanopi/ci-tools
+          orb-name: sean-e-dietrich/phpcs
           orb-path: .circleci/extract-inline-orb/orb.yml
           filters: *dev-filters
       - orb-tools/publish:
           requires: [orb-tools/pack]
-          orb-name: sean-e-dietrich/phpcs@${CIRCLE_TAG}
           filters: *prod-filters
+          orb-ref: sean-e-dietrich/phpcs@${CIRCLE_TAG}
+          attach-workspace: true
