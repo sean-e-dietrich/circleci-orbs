@@ -7,9 +7,10 @@ orbs:
       orb-tools: circleci/orb-tools@9.0.0
     jobs:
       new:
-        orb:
-          description: "The orb to extract"
-          type: string
+        parameters:
+          orb:
+            description: "The orb to extract"
+            type: string
         executor: orb-tools/alpine
         steps:
           - checkout
