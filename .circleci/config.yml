@@ -23,7 +23,7 @@ orbs:
           - run:
               name: Extract Orb
               command: |
-                mkdir .circleci/extract-inline-orbs || true
+                mkdir .circleci/extract-inline-orb || true
                 yq r .circleci/config.yml orbs.<<parameters.orb>> > .circleci/extract-inline-orb/<<parameters.orb>>.yml
           - persist_to_workspace:
               paths:
