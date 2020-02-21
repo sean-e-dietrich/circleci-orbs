@@ -2,10 +2,24 @@ version: 2.1
 
 orbs:
   orb-tools: circleci/orb-tools@9.0.0
+  extract:
+    jobs:
+      inline:
+        parameters:
+          orb:
+            description: "The orb to extract"
+            type: string
+        docker: circleci/ruby:buster
+        working_directory: /tmp/project
+        steps:
+          - checkout
+          - orb-tools/extract-inline-orb:
+              orb: <<parameters.orb>>
+              source: /tmp/project/.circleci/config.yml
+              file: .circleci/extract-inline-orb/<<parameters.orb>>.yml
   phpcs:
     description: >
       Run PHP Code Sniffer Tests on code to test if there are issues.
-
     jobs:
       drupal:
         executor: phpcs_executor
@@ -15,7 +29,6 @@ orbs:
         executor: phpcs_executor
         steps:
           - install_phpcs
-
     commands:
       install_phpcs:
         steps:
@@ -80,29 +93,52 @@ orbs:
         docker:
           - image: circleci/php:7.2-cli-buster
 
+all-filters: &all-filters
+  tags:
+    only: /.*/
+  branches:
+    only: /.*/
+
+dev-filters: &dev-filters
+  tags:
+    ignore: /.*/
+  branches:
+    only: /.*/
+
+prod-filters: &prod-filters
+  tags:
+    only: /.*/
+  branches:
+    ignore: /.*/
+
 workflows:
   version: 2.1
   test-phpcs:
     jobs:
-      - phpcs/drupal
-      - phpcs/wordpress
-      - extract_inline_phpcs:
-          requires:
-            - phpcs/drupal
-            - phpcs/wordpress
-      - orb-tools/publish-dev:
-          requires:
-            - extract_inline_phpcs
-          orb-name: sean-e-dietrich/phpcs
-          orb-path: .circleci/extract-inline-orb/orb.yml
+      - orb-tools/lint:
+          filters: *all-filters
 
-jobs:
-  extract_inline_phpcs:
-    docker:
-      - image: circleci/ruby:buster
-    working_directory: /tmp/project
-    steps:
-      - checkout
-      - orb-tools/extract-inline-orb:
+      # PHPCS
+      - phpcs/drupal:
+          requires: [orb-tools/lint]
+          filters: *all-filters
+      - phpcs/wordpress:
+          requires: [orb-tools/lint]
+          filters: *all-filters
+      - extract/inline:
+          name: extract_inline_phpcs
+          requires: [phpcs/drupal, phpcs/wordpress]
+          filters: *all-filters
           orb: phpcs
-          source: /tmp/project/.circleci/config.yml
+      - orb-tools/pack:
+          requires: [extract_inline_phpcs]
+          filters: *all-filters
+      - orb-tools/publish-dev:
+          requires: [orb-tools/pack]
+          orb-name: kanopi/ci-tools
+          orb-path: .circleci/extract-inline-orb/orb.yml
+          filters: *dev-filters
+      - orb-tools/publish:
+          requires: [orb-tools/pack]
+          orb-name: sean-e-dietrich/phpcs@${CIRCLE_TAG}
+          filters: *prod-filters
