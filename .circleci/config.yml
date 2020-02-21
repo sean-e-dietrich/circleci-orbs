@@ -19,7 +19,9 @@ orbs:
               command: apk add wget
           - run:
               name: Install YQ
-              command: wget -O /usr/local/bin/yq "https://github.com/mikefarah/yq/releases/download/3.1.2/yq_linux_amd64"
+              command: |
+                wget -O /usr/local/bin/yq "https://github.com/mikefarah/yq/releases/download/3.1.2/yq_linux_amd64"
+                chmod 755 /usr/local/bin/jq
           - run:
               name: Extract Orb
               command: |
