@@ -166,12 +166,12 @@ workflows:
           name: extract_inline_hello
           requires: [orb-tools/lint]
           filters: *all-filters
-          orb: extract
+          orb: hello
       - extract/new:
           name: extract_inline_extract
           requires: [orb-tools/lint]
           filters: *all-filters
-          orb: hello
+          orb: extract
 
       - orb-tools/pack:
           requires: [extract_inline_phpcs, extract_inline_hello, extract_inline_extract]
