@@ -91,11 +91,21 @@ orbs:
 workflows:
   version: 2.1
   test-phpcs:
-    - phpcs/drupal
-    - phpcs/wordpress
-    - orb-tools/extract-inline-orb:
-        requires:
-          - phpcs/drupal
-          - phpcs/wordpress
-        orb: phpcs
-        source: .circleci/config.yml
+    jobs:
+      - phpcs/drupal
+      - phpcs/wordpress
+      - extract_inline:
+          requires:
+            - phpcs/drupal
+            - phpcs/wordpress
+
+jobs:
+  extract_inline:
+    docker:
+      - image: circleci/ruby:buster
+    working_directory: /tmp/project
+    steps:
+      - checkout
+      - orb-tools/extract-inline-orb:
+          orb: phpcs
+          source: /tmp/project/.circleci/config.yml
