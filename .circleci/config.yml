@@ -116,12 +116,13 @@ orbs:
           - image: circleci/php:7.2-cli-buster
   hello:
     commands:
-      parameters:
-        to:
-          type: string
-          default: "${CIRCLE_USERNAME}"
-      steps:
-        - run: echo "Hello << parameters.to >>"
+      test:
+        parameters:
+          to:
+            type: string
+            default: "${CIRCLE_USERNAME}"
+        steps:
+          - run: echo "Hello << parameters.to >>"
 
 all-filters: &all-filters
   tags:
