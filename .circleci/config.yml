@@ -33,7 +33,7 @@ orbs:
               root: .
           - run:
               name: Displact Extracted Orb
-              command: cat "<<parameters.orb>>.yml"
+              command: cat ".circleci/extract-inline-orb/<<parameters.orb>>.yml"
       inline:
         parameters:
           orb:
