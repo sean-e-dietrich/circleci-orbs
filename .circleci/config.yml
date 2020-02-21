@@ -22,7 +22,11 @@ orbs:
                 chmod 755 /usr/local/bin/yq
           - run:
               name: Extract Orb
-              command: yq r .circleci/config.yml orbs.<<parameters.orb>> > src/<<parameters.orb>>.yml
+              command:
+                yq r .circleci/config.yml orbs.<<parameters.orb>>.commands > src/commands/<<parameters.orb>>.yml
+                yq r .circleci/config.yml orbs.<<parameters.orb>>.examples > src/examples/<<parameters.orb>>.yml
+                yq r .circleci/config.yml orbs.<<parameters.orb>>.executors > src/executors/<<parameters.orb>>.yml
+                yq r .circleci/config.yml orbs.<<parameters.orb>>.jobs > src/jobs/<<parameters.orb>>.yml
           - store_artifacts:
               path: src/<<parameters.orb>>.yml
           - persist_to_workspace:
