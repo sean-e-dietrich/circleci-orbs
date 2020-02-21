@@ -22,19 +22,17 @@ orbs:
                 chmod 755 /usr/local/bin/yq
           - run:
               name: Extract Orb
-              command: |
-                mkdir .circleci/extract-inline-orb || true
-                echo "version: 2.1" > .circleci/extract-inline-orb/@orb.yml
-                yq r .circleci/config.yml orbs.<<parameters.orb>> > .circleci/extract-inline-orb/<<parameters.orb>>.yml
+              command: yq r .circleci/config.yml orbs.<<parameters.orb>> > src/<<parameters.orb>>.yml
           - store_artifacts:
-              path: .circleci/extract-inline-orb
+              path: src/<<parameters.orb>>.yml
           - persist_to_workspace:
               paths:
-                -  .circleci/extract-inline-orb/<<parameters.orb>>.yml
+                -  src/<<parameters.orb>>.yml
               root: .
           - run:
               name: Displact Extracted Orb
-              command: cat ".circleci/extract-inline-orb/<<parameters.orb>>.yml"
+              command: cat "src/<<parameters.orb>>.yml"
+
   phpcs:
     description: >
       Run PHP Code Sniffer Tests on code to test if there are issues.
@@ -114,6 +112,7 @@ orbs:
       phpcs_executor:
         docker:
           - image: circleci/php:7.2-cli-buster
+
   hello:
     commands:
       test:
@@ -161,12 +160,14 @@ workflows:
           requires: [phpcs/drupal, phpcs/wordpress]
           filters: *all-filters
           orb: phpcs
+
       # Testing
       - extract/new:
           name: extract_inline_hello
           requires: [orb-tools/lint]
           filters: *all-filters
           orb: hello
+
       - extract/new:
           name: extract_inline_extract
           requires: [orb-tools/lint]
@@ -177,13 +178,14 @@ workflows:
           requires: [extract_inline_phpcs, extract_inline_hello, extract_inline_extract]
           filters: *all-filters
           attach-workspace: true
-          source-dir: .circleci/extract-inline-orb/
+          source-dir: src
 
       - orb-tools/publish-dev:
           requires: [orb-tools/pack]
           orb-name: sean-e-dietrich/phpcs
-          orb-path: .circleci/extract-inline-orb/orb.yml
+          orb-path: orb.yml
           filters: *dev-filters
+
       - orb-tools/publish:
           requires: [orb-tools/pack]
           filters: *prod-filters
