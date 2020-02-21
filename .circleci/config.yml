@@ -86,13 +86,16 @@ workflows:
     jobs:
       - phpcs/drupal
       - phpcs/wordpress
-      - extract_inline:
+      - extract_inline_phpcs:
           requires:
             - phpcs/drupal
             - phpcs/wordpress
+      - orb-tools/publish-dev:
+          orb-name: sean-e-dietrich/phpcs
+          orb-path: .circleci/extract-inline-orb/orb.yml
 
 jobs:
-  extract_inline:
+  extract_inline_phpcs:
     docker:
       - image: circleci/ruby:buster
     working_directory: /tmp/project
