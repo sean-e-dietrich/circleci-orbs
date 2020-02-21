@@ -91,6 +91,8 @@ workflows:
             - phpcs/drupal
             - phpcs/wordpress
       - orb-tools/publish-dev:
+          requires:
+            - extract_inline_phpcs
           orb-name: sean-e-dietrich/phpcs
           orb-path: .circleci/extract-inline-orb/orb.yml
 
