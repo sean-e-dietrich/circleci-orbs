@@ -43,7 +43,11 @@ orbs:
                 source $BASH_ENV; \
                 # Drupal Coder & WP Coding Standards w/ a matching version of PHP_CodeSniffer
                 composer global require drupal/coder wp-coding-standards/wpcs phpcompatibility/phpcompatibility-wp >/dev/null; \
-                phpcs --config-set installed_paths $HOME/.composer/vendor/drupal/coder/coder_sniffer/,$HOME/.composer/vendor/wp-coding-standards/wpcs/,$HOME/.composer/vendor/phpcompatibility/php-compatibility/PHPCompatibility/,$HOME/.composer/vendor/phpcompatibility/phpcompatibility-wp/PHPCompatibilityWP,$HOME/.composer/vendor/phpcompatibility/phpcompatibility-paragonie/PHPCompatibilityParagonieRandomCompat;
+                phpcs --config-set installed_paths $HOME/.composer/vendor/drupal/coder/coder_sniffer/,\
+                $HOME/.composer/vendor/wp-coding-standards/wpcs/,\
+                $HOME/.composer/vendor/phpcompatibility/php-compatibility/PHPCompatibility/,\
+                $HOME/.composer/vendor/phpcompatibility/phpcompatibility-wp/PHPCompatibilityWP,\
+                $HOME/.composer/vendor/phpcompatibility/phpcompatibility-paragonie/PHPCompatibilityParagonieRandomCompat;
           - run:
               name: Validate PHPCS Installed
               command: phpcs -i && phpcs --config-show
