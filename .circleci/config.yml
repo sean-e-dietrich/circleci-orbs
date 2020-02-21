@@ -29,7 +29,7 @@ orbs:
                 yq r .circleci/config.yml orbs.<<parameters.orb>> > .circleci/extract-inline-orb/<<parameters.orb>>.yml
           - persist_to_workspace:
               paths:
-                - .circlec/extract-inline-orb/<<parameters.orb>>.yml
+                - .circleci/extract-inline-orb/<<parameters.orb>>.yml
               root: .
           - run:
               name: Displact Extracted Orb
