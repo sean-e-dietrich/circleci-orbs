@@ -27,7 +27,7 @@ orbs:
               path: src/<<parameters.orb>>.yml
           - persist_to_workspace:
               paths:
-                -  src/<<parameters.orb>>.yml
+                - src/<<parameters.orb>>.yml
               root: .
           - run:
               name: Displact Extracted Orb
