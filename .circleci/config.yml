@@ -23,11 +23,8 @@ orbs:
               name: Install Packages
               command: |
                 # Add composer bin directory to PATH
-                echo -e "\n"'export PATH="$PATH:$HOME/.composer/vendor/bin"' >> $HOME/.profile; \
-                # Reload updated PATH from profile to make composer/drush/etc. visible below
-                . $HOME/.profile; \
-                # Install cgr to use it in-place of `composer global require`
-                composer global require consolidation/cgr >/dev/null; \
+                echo -e "\n"'export PATH="$PATH:$HOME/.composer/vendor/bin"' >> $BASH_ENV; \
+                source $BASH_ENV; \
                 # Drupal Coder & WP Coding Standards w/ a matching version of PHP_CodeSniffer
                 composer global require drupal/coder wp-coding-standards/wpcs phpcompatibility/phpcompatibility-wp >/dev/null; \
                 phpcs --config-set installed_paths \
