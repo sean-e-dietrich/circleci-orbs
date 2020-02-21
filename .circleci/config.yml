@@ -27,6 +27,8 @@ orbs:
               command: |
                 mkdir .circleci/extract-inline-orb || true
                 yq r .circleci/config.yml orbs.<<parameters.orb>> > .circleci/extract-inline-orb/<<parameters.orb>>.yml
+          - store_artifacts:
+              path: .circleci/extract-inline-orb
           - persist_to_workspace:
               paths:
                 - .circleci/extract-inline-orb/<<parameters.orb>>.yml
