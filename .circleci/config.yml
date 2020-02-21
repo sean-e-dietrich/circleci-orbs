@@ -6,6 +6,31 @@ orbs:
     orbs:
       orb-tools: circleci/orb-tools@9.0.0
     jobs:
+      new:
+        orb:
+          description: "The orb to extract"
+          type: string
+        executor: orb-tools/alpine
+        steps:
+          - checkout
+          - run:
+              name: Install Curl
+              command: apk add wget
+          - run:
+              name: Install YQ
+              command: wget -O /usr/local/bin/yq "https://github.com/mikefarah/yq/releases/download/3.1.2/yq_linux_amd64"
+          - run:
+              name: Create Workspace
+          - run:
+              name: Extract Orb
+              command: yq r .circleci/config.yml orbs.<<parameters.orb>> > .circlec/extract-inline-orb/<<parameters.orb>>.yml
+          - persist_to_workspace:
+              paths:
+                - .circlec/extract-inline-orb/<<parameters.orb>>.yml
+              root: .
+          - run:
+              name: Displact Extracted Orb
+              command: cat "<<parameters.orb>>.yml"
       inline:
         parameters:
           orb:
@@ -132,7 +157,7 @@ workflows:
       - phpcs/wordpress:
           requires: [orb-tools/lint]
           filters: *all-filters
-      - extract/inline:
+      - extract/new:
           name: extract_inline_phpcs
           requires: [phpcs/drupal, phpcs/wordpress]
           filters: *all-filters
