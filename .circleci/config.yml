@@ -22,7 +22,9 @@ orbs:
               command: wget -O /usr/local/bin/yq "https://github.com/mikefarah/yq/releases/download/3.1.2/yq_linux_amd64"
           - run:
               name: Extract Orb
-              command: yq r .circleci/config.yml orbs.<<parameters.orb>> > .circlec/extract-inline-orb/<<parameters.orb>>.yml
+              command: |
+                mkdir .circleci/extract-inline-orbs || true
+                yq r .circleci/config.yml orbs.<<parameters.orb>> > .circleci/extract-inline-orb/<<parameters.orb>>.yml
           - persist_to_workspace:
               paths:
                 - .circlec/extract-inline-orb/<<parameters.orb>>.yml
