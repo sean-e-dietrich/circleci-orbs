@@ -2,64 +2,17 @@ version: 2.1
 
 orbs:
   orb-tools: circleci/orb-tools@9.0.0
-  extract:
-    orbs:
-      orb-tools: circleci/orb-tools@9.0.0
-    jobs:
-      new:
-        parameters:
-          orb:
-            description: "The orb to extract"
-            type: string
-        executor: orb-tools/alpine
-        steps:
-          - checkout
-          - run:
-              name: Install YQ
-              command: |
-                apk add wget
-                wget -O /usr/local/bin/yq "https://github.com/mikefarah/yq/releases/download/3.1.2/yq_linux_amd64"
-                chmod 755 /usr/local/bin/yq
-          - run:
-              name: Extract Orb
-              command: |
-                COMMAND=$(yq r .circleci/config.yml orbs.<<parameters.orb>>.commands)
-                ( [[ "${COMMAND}" != "" ]] &&  echo "${COMMAND}" > src/commands/<<parameters.orb>>.yml ) || true
-
-                EXAMPLE=$(yq r .circleci/config.yml orbs.<<parameters.orb>>.examples)
-                ( [[ "${EXAMPLE}" != "" ]] && echo "${EXAMPLE}" > src/examples/<<parameters.orb>>.yml ) || true
-
-                EXECUTORS=$(yq r .circleci/config.yml orbs.<<parameters.orb>>.executors)
-                ( [[ "${EXECUTORS}" != "" ]] && echo "${EXECUTORS}" > src/executors/<<parameters.orb>>.yml ) || true
-
-                JOBS=$(yq r .circleci/config.yml orbs.<<parameters.orb>>.jobs)
-                ( [[ "${JOBS}" != "" ]] && echo "${JOBS}" > src/jobs/<<parameters.orb>>.yml ) || true
-          - store_artifacts:
-              path: src
-          - persist_to_workspace:
-              paths:
-                - src/commands/<<parameters.orb>>.yml
-                - src/examples/<<parameters.orb>>.yml
-                - src/executors/<<parameters.orb>>.yml
-                - src/jobs/<<parameters.orb>>.yml
-              root: .
-          - run:
-              name: Displact Extracted Orb
-              command: |
-                ( [[ -f src/commands/<<parameters.orb>>.yml ]] && cat src/commands/<<parameters.orb>>.yml ) || true
-                ( [[ -f src/examples/<<parameters.orb>>.yml ]] && cat src/examples/<<parameters.orb>>.yml ) || true
-                ( [[ -f src/executors/<<parameters.orb>>.yml ]] && cat src/executors/<<parameters.orb>>.yml ) || true
-                ( [[ -f src/jobs/<<parameters.orb>>.yml ]] && cat src/jobs/<<parameters.orb>>.yml ) || true
-
-  phpcs:
+  ci-tools:
     description: >
-      Run PHP Code Sniffer Tests on code to test if there are issues.
+      Tools and commands used within Kanopi to increase productivity.
     jobs:
-      drupal:
+      phpcs-drupal:
+        description: Run PHP Code Sniffer Tests on Drupal Code.
         executor: phpcs_executor
         steps:
           - install_phpcs
-      wordpress:
+      phpcs-wordpress:
+        description: Run PHP Code Sniffer Tests on WordPress Code.
         executor: phpcs_executor
         steps:
           - install_phpcs
@@ -82,64 +35,59 @@ orbs:
           - run:
               name: Validate PHPCS Installed
               command: phpcs -i && phpcs --config-show
-      check_code:
+
+      phpcs_check_code:
         parameters:
-          project:
-            description: "The type of project being checked. Currently only Drupal and WordPress are supported."
-            type: enum
-            default: "none"
-            enum: ["wordpress", "drupal", "none"]
           standards:
-            description: "What are the standards that should be checked or what is the path to the PHPCS configuration file to use."
             type: string
-            default: ""
           extensions:
-            description: "What file extensions should be checked."
             type: string
-            default: ""
           location:
-            description: "What directory or file should be checked."
             type: string
-            default: ""
-          arguments:
-            description: "The arguments to use to instead of the defaults."
-            type: string
-            default: ""
         steps:
+          - checkout
           - run:
-              name: Execute PHPCS
-              command: |
-                CODING_STANDARDS=""
-                FILE_EXTENSION=""
+              name: "Run PHPCS Code"
+              command: phpcs --standard="<<parameters.standards>>" --extensions="<<parameters.extensions>>" <<parameters.location>>
 
-                case "<<parameters.project>>" in
-                  drupal)
-                    CODING_STANDARDS="Drupal,DrupalPractice"
-                    FILE_EXTENSION="php,module,inc,install,test,profile,theme,css,info,txt,md"
-                    ;;
-                  wordpress)
-                    CODING_STANDARDS="WordPress,WordPress-Extra,WordPress-Core"
-                    FILE_EXTENSION="php"
-                    ;;
-                esac
+      phpcs_check_drupal:
+        parameters:
+          standards:
+            type: string
+            default: "Drupal,DrupalPractice"
+          extensions:
+            type: string
+            default: "php,module,inc,install,test,profile,theme,css,info,txt,md"
+          location:
+            type: string
+            default: "."
+        steps:
+          - phpcs_check_code:
+              standards: <<parameters.standards>>
+              extensions: <<parameters.extensions>>
+              location: <<parameters.location>>
 
-                if [[ "${CODING_STANDARDS}" != "" ]]; then
-                  phpcs --standard="${CODING_STANDARDS}" <<parameters.location>>
-                fi
+      phpcs_check_wordpress:
+        parameters:
+          standards:
+            type: string
+            default: "WordPress,WordPress-Extra,WordPress-Core"
+          extensions:
+            type: string
+            default: "php"
+          location:
+            type: string
+            default: "."
+        steps:
+          - phpcs_check_code:
+              standards: <<parameters.standards>>
+              extensions: <<parameters.extensions>>
+              location: <<parameters.location>>
+
     executors:
       phpcs_executor:
         docker:
           - image: circleci/php:7.2-cli-buster
-
-  hello:
-    commands:
-      test:
-        parameters:
-          to:
-            type: string
-            default: "${CIRCLE_USERNAME}"
-        steps:
-          - run: echo "Hello << parameters.to >>"
 
 all-filters: &all-filters
   tags:
@@ -166,46 +114,37 @@ workflows:
       - orb-tools/lint:
           filters: *all-filters
 
-      # PHPCS
-      - phpcs/drupal:
+      - ci-tools/phpcs-drupal:
           requires: [orb-tools/lint]
           filters: *all-filters
-      - phpcs/wordpress:
+      - ci-tools/phpcs-wordpress:
           requires: [orb-tools/lint]
           filters: *all-filters
-      - extract/new:
-          name: extract_inline_phpcs
-          requires: [phpcs/drupal, phpcs/wordpress]
-          filters: *all-filters
-          orb: phpcs
 
-      # Testing
-      - extract/new:
-          name: extract_inline_hello
-          requires: [orb-tools/lint]
+      - extract-inline:
+          requires: [ci-tools/phpcs-drupal, ci-tools/phpcs-wordpress]
           filters: *all-filters
-          orb: hello
-
-      - extract/new:
-          name: extract_inline_extract
-          requires: [orb-tools/lint]
-          filters: *all-filters
-          orb: extract
-
-      - orb-tools/pack:
-          requires: [extract_inline_phpcs, extract_inline_hello, extract_inline_extract]
-          filters: *all-filters
-          attach-workspace: true
-          source-dir: src
 
       - orb-tools/publish-dev:
-          requires: [orb-tools/pack]
+          requires: [extract-inline]
           orb-name: sean-e-dietrich/phpcs
-          orb-path: orb.yml
+          orb-path: .circleci/extract-inline-orb/orb.yml
           filters: *dev-filters
 
       - orb-tools/publish:
-          requires: [orb-tools/pack]
+          requires: [extract-inline]
           filters: *prod-filters
           orb-ref: sean-e-dietrich/phpcs@${CIRCLE_TAG}
+          orb-path: .circleci/extract-inline-orb/orb.yml
           attach-workspace: true
+
+jobs:
+  # Used for Extracting Orb
+  extract-inline:
+    docker:
+      - image: circleci/ruby:buster
+    steps:
+      - checkout
+      - orb-tools/extract-inline-orb:
+          orb: ci-tools
+          source: .circleci/config.yml
