@@ -163,9 +163,14 @@ workflows:
             - ci-tools/phpcs-drupal
             - ci-tools/phpcs-wordpress
 
+      - orb-tools/pack:
+          filters: *all-filters
+          requires: [extract-inline]
+          attach-workspace: true
+
       - orb-tools/publish-dev:
           filters: *dev-filters
-          requires: [extract-inline]
+          requires: [orb-tools/pack]
           orb-name: sean-e-dietrich/ci-tools
 
       - orb-tools/publish:
