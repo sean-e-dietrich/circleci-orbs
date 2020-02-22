@@ -139,8 +139,7 @@ workflows:
 jobs:
   # Used for Extracting Orb
   extract-inline:
-    docker:
-      - image: orb-tools/alpine
+    executor: orb-tools/alpine
     steps:
       - checkout
       - run:
