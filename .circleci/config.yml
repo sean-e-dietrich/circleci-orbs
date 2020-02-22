@@ -22,9 +22,9 @@ orbs:
         steps:
           - install_phpcs
           - phpcs_check_code:
-            standards: <<parameters.standards>>
-            extensions: <<parameters.extensions>>
-            location: <<parameters.location>>
+              standards: <<parameters.standards>>
+              extensions: <<parameters.extensions>>
+              location: <<parameters.location>>
 
       phpcs-wordpress:
         description: Run PHP Code Sniffer Tests on WordPress Code.
