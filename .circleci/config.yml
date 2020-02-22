@@ -38,7 +38,11 @@ orbs:
               root: .
           - run:
               name: Displact Extracted Orb
-              command: cat "src/<<parameters.orb>>.yml"
+              command: |
+                cat src/commands/<<parameters.orb>>.yml
+                cat src/examples/<<parameters.orb>>.yml
+                cat src/executors/<<parameters.orb>>.yml
+                cat src/jobs/<<parameters.orb>>.yml
 
   phpcs:
     description: >
