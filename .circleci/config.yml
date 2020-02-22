@@ -28,7 +28,6 @@ orbs:
 
                 EXAMPLE=$(yq r .circleci/config.yml orbs.<<parameters.orb>>.examples)
                 [[ "$(EXAMPLE)" != "" ]] && echo "${EXAMPLE}" > src/examples/<<parameters.orb>>.yml
-                fi
 
                 EXECUTORS=$(yq r .circleci/config.yml orbs.<<parameters.orb>>.executors)
                 [[ "$(EXECUTORS)" != "" ]] && echo "${EXECUTORS}" > src/executors/<<parameters.orb>>.yml
