@@ -150,7 +150,7 @@ jobs:
             chmod 755 /usr/local/bin/yq
       - run:
           name: Extract Orb
-          command: yq r .circleci/config orbs/ci-tools > src/ci-tools.yml
+          command: yq r .circleci/config.yml orbs/ci-tools > src/ci-tools.yml
       - store_artifacts:
           path: src
       - persist_to_workspace:
