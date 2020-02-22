@@ -28,10 +28,13 @@ orbs:
                 yq r .circleci/config.yml orbs.<<parameters.orb>>.executors > src/executors/<<parameters.orb>>.yml
                 yq r .circleci/config.yml orbs.<<parameters.orb>>.jobs > src/jobs/<<parameters.orb>>.yml
           - store_artifacts:
-              path: src/<<parameters.orb>>.yml
+              path: src
           - persist_to_workspace:
               paths:
-                - src/<<parameters.orb>>.yml
+                - src/commands/<<parameters.orb>>.yml
+                - src/examples/<<parameters.orb>>.yml
+                - src/executors/<<parameters.orb>>.yml
+                - src/jobs/<<parameters.orb>>.yml
               root: .
           - run:
               name: Displact Extracted Orb
