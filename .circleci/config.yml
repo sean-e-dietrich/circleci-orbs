@@ -9,29 +9,57 @@ orbs:
       phpcs-drupal:
         description: Run PHP Code Sniffer Tests on Drupal Code.
         executor: phpcs_executor
+        parameters:
+          standards:
+            type: string
+            default: "Drupal,DrupalPractice"
+          extensions:
+            type: string
+            default: "php,module,inc,install,test,profile,theme,css,info,txt,md"
+          location:
+            type: string
+            default: "."
         steps:
           - install_phpcs
+          - phpcs_check_code:
+            standards: <<parameters.standards>>
+            extensions: <<parameters.extensions>>
+            location: <<parameters.location>>
+
       phpcs-wordpress:
         description: Run PHP Code Sniffer Tests on WordPress Code.
         executor: phpcs_executor
+        parameters:
+          standards:
+            type: string
+            default: "WordPress,WordPress-Extra,WordPress-Core"
+          extensions:
+            type: string
+            default: "php"
+          location:
+            type: string
+            default: "."
         steps:
           - install_phpcs
+          - phpcs_check_code:
+              standards: <<parameters.standards>>
+              extensions: <<parameters.extensions>>
+              location: <<parameters.location>>
+
     commands:
       install_phpcs:
         steps:
           - run:
               name: Install Packages
               command: |
-                # Add composer bin directory to PATH
-                echo -e "\n"'export PATH="$PATH:$HOME/.composer/vendor/bin"' >> $BASH_ENV; \
-                source $BASH_ENV; \
-                # Drupal Coder & WP Coding Standards w/ a matching version of PHP_CodeSniffer
-                composer global require drupal/coder wp-coding-standards/wpcs phpcompatibility/phpcompatibility-wp >/dev/null; \
+                echo -e "\n"'export PATH="$PATH:$HOME/.composer/vendor/bin"' >> $BASH_ENV
+                source $BASH_ENV
+                composer global require drupal/coder wp-coding-standards/wpcs phpcompatibility/phpcompatibility-wp >/dev/null
                 phpcs --config-set installed_paths $HOME/.composer/vendor/drupal/coder/coder_sniffer/,\
                 $HOME/.composer/vendor/wp-coding-standards/wpcs/,\
                 $HOME/.composer/vendor/phpcompatibility/php-compatibility/PHPCompatibility/,\
                 $HOME/.composer/vendor/phpcompatibility/phpcompatibility-wp/PHPCompatibilityWP,\
-                $HOME/.composer/vendor/phpcompatibility/phpcompatibility-paragonie/PHPCompatibilityParagonieRandomCompat;
+                $HOME/.composer/vendor/phpcompatibility/phpcompatibility-paragonie/PHPCompatibilityParagonieRandomCompat
           - run:
               name: Validate PHPCS Installed
               command: phpcs -i && phpcs --config-show
@@ -50,44 +78,14 @@ orbs:
               name: "Run PHPCS Code"
               command: phpcs --standard="<<parameters.standards>>" --extensions="<<parameters.extensions>>" <<parameters.location>>
 
-      phpcs_check_drupal:
-        parameters:
-          standards:
-            type: string
-            default: "Drupal,DrupalPractice"
-          extensions:
-            type: string
-            default: "php,module,inc,install,test,profile,theme,css,info,txt,md"
-          location:
-            type: string
-            default: "."
-        steps:
-          - phpcs_check_code:
-              standards: <<parameters.standards>>
-              extensions: <<parameters.extensions>>
-              location: <<parameters.location>>
-
-      phpcs_check_wordpress:
-        parameters:
-          standards:
-            type: string
-            default: "WordPress,WordPress-Extra,WordPress-Core"
-          extensions:
-            type: string
-            default: "php"
-          location:
-            type: string
-            default: "."
-        steps:
-          - phpcs_check_code:
-              standards: <<parameters.standards>>
-              extensions: <<parameters.extensions>>
-              location: <<parameters.location>>
-
     executors:
       phpcs_executor:
+        parameters:
+          tag:
+            type: string
+            default: "7.2-cli-buster"
         docker:
-          - image: circleci/php:7.2-cli-buster
+          - image: circleci/php:<<parameters.tag>>
 
 all-filters: &all-filters
   tags:
@@ -115,36 +113,61 @@ workflows:
           filters: *all-filters
 
       - ci-tools/phpcs-drupal:
-          requires: [orb-tools/lint]
           filters: *all-filters
+          requires: [orb-tools/lint]
       - ci-tools/phpcs-wordpress:
-          requires: [orb-tools/lint]
           filters: *all-filters
+          requires: [orb-tools/lint]
 
       - extract-inline:
-          requires: [ci-tools/phpcs-drupal, ci-tools/phpcs-wordpress]
           filters: *all-filters
+          requires:
+            - ci-tools/phpcs-drupal
+            - ci-tools/phpcs-wordpress
 
       - orb-tools/publish-dev:
-          requires: [extract-inline]
-          orb-name: sean-e-dietrich/phpcs
-          orb-path: .circleci/extract-inline-orb/orb.yml
           filters: *dev-filters
+          requires: [extract-inline]
+          orb-name: sean-e-dietrich/ci-tools
 
       - orb-tools/publish:
-          requires: [extract-inline]
           filters: *prod-filters
-          orb-ref: sean-e-dietrich/phpcs@${CIRCLE_TAG}
-          orb-path: .circleci/extract-inline-orb/orb.yml
+          requires: [extract-inline]
+          orb-ref: sean-e-dietrich/ci-tools@${CIRCLE_TAG}
           attach-workspace: true
 
 jobs:
   # Used for Extracting Orb
   extract-inline:
     docker:
-      - image: circleci/ruby:buster
+      - image: orb-tools/alpine
     steps:
       - checkout
-      - orb-tools/extract-inline-orb:
-          orb: ci-tools
-          source: .circleci/config.yml
+      - run:
+          name: Install YQ
+          command: |
+            apk add wget
+            wget -O /usr/local/bin/yq "https://github.com/mikefarah/yq/releases/download/3.1.2/yq_linux_amd64"
+            chmod 755 /usr/local/bin/yq
+      - run:
+          name: Extract Orb
+          command: yq r .circleci/config orbs/ci-tools > src/ci-tools.yml
+      - store_artifacts:
+          path: src
+      - persist_to_workspace:
+          paths:
+            - src/ci-tools.yml
+          root: .
+      - run:
+          name: Display Extracted Orb
+          command: cat src/ci-tools.yml
+
+  # Check Spelling of the README.md file
+  check-spelling:
+    docker:
+      - image: circleci/buildpack-deps:jessie
+    steps:
+      - checkout
+      # - run:
+      #     name: Check Spelling
+      #     command: aspell

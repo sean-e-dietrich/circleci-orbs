@@ -1,0 +1,14 @@
+description: >
+  Use PHP CodeSniffer to test code against custom Drupal modules.
+usage:
+  version: 2.1
+  orbs:
+    ci-tools: kanopi/ci-tools@1.0.0
+  workflows:
+    version: 2.1
+    phpcs-drupal:
+      jobs:
+        - ci-tools/phpcs-drupal:
+            standards: "Drupal,DrupalPractice"
+            extensions: "php,module,inc,install,test,profile,theme,css,info,txt,md"
+            location: "modules/custom/"
