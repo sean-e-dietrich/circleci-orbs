@@ -105,37 +105,6 @@ prod-filters: &prod-filters
   branches:
     ignore: /.*/
 
-workflows:
-  version: 2.1
-  test-phpcs:
-    jobs:
-      - orb-tools/lint:
-          filters: *all-filters
-
-      - ci-tools/phpcs-drupal:
-          filters: *all-filters
-          requires: [orb-tools/lint]
-      - ci-tools/phpcs-wordpress:
-          filters: *all-filters
-          requires: [orb-tools/lint]
-
-      - extract-inline:
-          filters: *all-filters
-          requires:
-            - ci-tools/phpcs-drupal
-            - ci-tools/phpcs-wordpress
-
-      - orb-tools/publish-dev:
-          filters: *dev-filters
-          requires: [extract-inline]
-          orb-name: sean-e-dietrich/ci-tools
-
-      - orb-tools/publish:
-          filters: *prod-filters
-          requires: [extract-inline]
-          orb-ref: sean-e-dietrich/ci-tools@${CIRCLE_TAG}
-          attach-workspace: true
-
 jobs:
   # Used for Extracting Orb
   extract-inline:
@@ -170,3 +139,37 @@ jobs:
       # - run:
       #     name: Check Spelling
       #     command: aspell
+
+workflows:
+  version: 2.1
+  test-phpcs:
+    jobs:
+      - orb-tools/lint:
+          filters: *all-filters
+
+      - ci-tools/phpcs-drupal:
+          filters: *all-filters
+          requires: [orb-tools/lint]
+          location: tests/phpcs-drupal
+
+      - ci-tools/phpcs-wordpress:
+          filters: *all-filters
+          requires: [orb-tools/lint]
+          location: tests/phpcs-wordpress
+
+      - extract-inline:
+          filters: *all-filters
+          requires:
+            - ci-tools/phpcs-drupal
+            - ci-tools/phpcs-wordpress
+
+      - orb-tools/publish-dev:
+          filters: *dev-filters
+          requires: [extract-inline]
+          orb-name: sean-e-dietrich/ci-tools
+
+      - orb-tools/publish:
+          filters: *prod-filters
+          requires: [extract-inline]
+          orb-ref: sean-e-dietrich/ci-tools@${CIRCLE_TAG}
+          attach-workspace: true
