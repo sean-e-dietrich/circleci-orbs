@@ -22,26 +22,19 @@ orbs:
                 chmod 755 /usr/local/bin/yq
           - run:
               name: Extract Orb
-              command:
+              command: |
                 COMMAND=$(yq r .circleci/config.yml orbs.<<parameters.orb>>.commands)
-                if [[ "$(COMMAND)" != "" ]]; then
-                  echo "${COMMAND}" > src/commands/<<parameters.orb>>.yml
-                fi
+                [[ "$(COMMAND)" != "" ]] &&  echo "${COMMAND}" > src/commands/<<parameters.orb>>.yml
 
                 EXAMPLE=$(yq r .circleci/config.yml orbs.<<parameters.orb>>.examples)
-                if [[ "$(EXAMPLE)" != "" ]]; then
-                  echo "${EXAMPLE}" > src/examples/<<parameters.orb>>.yml
+                [[ "$(EXAMPLE)" != "" ]] && echo "${EXAMPLE}" > src/examples/<<parameters.orb>>.yml
                 fi
 
                 EXECUTORS=$(yq r .circleci/config.yml orbs.<<parameters.orb>>.executors)
-                if [[ "$(EXECUTORS)" != "" ]]; then
-                  echo "${EXECUTORS}" > src/executors/<<parameters.orb>>.yml
-                fi
+                [[ "$(EXECUTORS)" != "" ]] && echo "${EXECUTORS}" > src/executors/<<parameters.orb>>.yml
 
                 JOBS=$(yq r .circleci/config.yml orbs.<<parameters.orb>>.jobs)
-                if [[ "$(JOBS)" != "" ]]; then
-                  echo "${JOBS}" > src/jobs/<<parameters.orb>>.yml
-                fi
+                [[ "$(JOBS)" != "" ]] && echo "${JOBS}" > src/jobs/<<parameters.orb>>.yml
           - store_artifacts:
               path: src
           - persist_to_workspace:
