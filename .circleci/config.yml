@@ -46,10 +46,10 @@ orbs:
           - run:
               name: Displact Extracted Orb
               command: |
-                [[ -f src/commands/<<parameters.orb>>.yml ]] && cat src/commands/<<parameters.orb>>.yml
-                [[ -f src/examples/<<parameters.orb>>.yml ]] && cat src/examples/<<parameters.orb>>.yml
-                [[ -f src/executors/<<parameters.orb>>.yml ]] && cat src/executors/<<parameters.orb>>.yml
-                [[ -f src/jobs/<<parameters.orb>>.yml ]] && cat src/jobs/<<parameters.orb>>.yml
+                ( [[ -f src/commands/<<parameters.orb>>.yml ]] && cat src/commands/<<parameters.orb>>.yml ) || true
+                ( [[ -f src/examples/<<parameters.orb>>.yml ]] && cat src/examples/<<parameters.orb>>.yml ) || true
+                ( [[ -f src/executors/<<parameters.orb>>.yml ]] && cat src/executors/<<parameters.orb>>.yml ) || true
+                ( [[ -f src/jobs/<<parameters.orb>>.yml ]] && cat src/jobs/<<parameters.orb>>.yml ) || true
 
   phpcs:
     description: >
